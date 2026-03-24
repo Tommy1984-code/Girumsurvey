@@ -731,6 +731,7 @@ function AdminDashboard() {
   const adminKey = localStorage.getItem('admin_key') || '';
 
   const [filters, setFilters] = React.useState({ search: '', date_from: '', date_to: '' });
+  const [searchInput, setSearchInput] = React.useState('');
   const [selectedIds, setSelectedIds] = React.useState(new Set());
   const [loadingResponses, setLoadingResponses] = React.useState(false);
   const [pagination, setPagination] = React.useState({ page: 1, limit: 20, total: 0, total_pages: 0 });
@@ -876,6 +877,15 @@ function AdminDashboard() {
   function changePage(newPage) {
     if (newPage < 1 || newPage > pagination.total_pages) return;
     fetchResponsesWithFilters(newPage, filters);
+  }
+
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    const newFilters = { ...filters, search: searchInput };
+    setFilters(newFilters);
+    setPagination((p) => ({ ...p, page: 1 }));
+    setSelectedIds(new Set());
+    fetchResponsesWithFilters(1, newFilters);
   }
 
   function handleFilterChange(newFilters) {
@@ -1209,6 +1219,7 @@ function AdminDashboard() {
 
   function clearFilters() {
     setFilters({ search: '', date_from: '', date_to: '' });
+    setSearchInput('');
     handleFilterChange({ search: '', date_from: '', date_to: '' });
   }
 
@@ -1726,19 +1737,29 @@ function AdminDashboard() {
 
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
               <div className="p-5 border-b border-gray-100">
-                <div className="flex flex-wrap gap-3">
+                <form onSubmit={handleSearchSubmit} className="flex flex-wrap gap-3">
                   <div className="flex-1 min-w-[200px] max-w-[400px]">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input type="text" placeholder="Search patient name or doctor name..." value={filters.search} onChange={(e) => handleFilterChange({ ...filters, search: e.target.value })} className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-200 text-sm transition-all" />
+                      <input 
+                        type="text" 
+                        placeholder="Search patient name or doctor name..." 
+                        value={searchInput} 
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchSubmit(e); } }}
+                        className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-200 text-sm transition-all" 
+                      />
                     </div>
                   </div>
                   <input type="date" value={filters.date_from} onChange={(e) => handleFilterChange({ ...filters, date_from: e.target.value })} className="px-4 py-2.5 border-2 border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500" />
                   <input type="date" value={filters.date_to} onChange={(e) => handleFilterChange({ ...filters, date_to: e.target.value })} className="px-4 py-2.5 border-2 border-gray-100 rounded-xl text-sm focus:ring-2 focus:ring-blue-500" />
-                  <button onClick={clearFilters} className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-medium flex items-center gap-2 text-sm transition-colors">
+                  <button type="submit" className="px-4 py-2.5 bg-blue-500 text-white rounded-xl hover:bg-blue-600 font-medium flex items-center gap-2 text-sm transition-colors">
+                    <Search className="w-4 h-4" /> Search
+                  </button>
+                  <button type="button" onClick={clearFilters} className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-medium flex items-center gap-2 text-sm transition-colors">
                     <Filter className="w-4 h-4" /> Clear
                   </button>
-                </div>
+                </form>
               </div>
 
               {someSelected && (
